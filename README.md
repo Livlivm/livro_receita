@@ -22,7 +22,7 @@ O Livro de Receitas é um aplicativo desenvolvido com Flutter e Dart, com o obje
 - API REST
 - Material Design
 
-## 📱 Telas do aplicativo
+## Telas do aplicativo
 
 ### Tela inicial
 
