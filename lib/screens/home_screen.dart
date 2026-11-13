@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/receita.dart';
 import '../services/receita_service.dart';
+import '../services/ideia_widget_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/receita_card.dart';
 import '../widgets/receita_destaque_widget.dart';
@@ -32,6 +33,31 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     carregarReceitas();
     carregarFavoritas();
+  }
+
+  Future<void> adicionarWidgetIdeia() async {
+    try {
+      final resultado = await IdeiaWidgetService.adicionarWidget();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resultado
+                ? 'Solicitação enviada! Confirme a adição na tela do Android.'
+                : 'Seu launcher não permite adicionar o widget automaticamente.',
+          ),
+          backgroundColor: resultado ? AppTheme.laranjaEscuro : Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao adicionar widget: $e')));
+    }
   }
 
   Future<void> carregarReceitas() async {
@@ -221,6 +247,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     size: 44,
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            OutlinedButton.icon(
+              onPressed: adicionarWidgetIdeia,
+              icon: const Icon(Icons.lightbulb_outline),
+              label: const Text('Adicionar widget Ideia'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.laranjaEscuro,
+                side: const BorderSide(color: AppTheme.laranjaEscuro),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
 
