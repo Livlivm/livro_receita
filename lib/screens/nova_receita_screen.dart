@@ -97,7 +97,9 @@ class _NovaReceitaScreenState extends State<NovaReceitaScreen> {
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
-      if (mounted) setState(() => salvando = false);
+      if (mounted) {
+        setState(() => salvando = false);
+      }
     }
   }
 
@@ -168,7 +170,7 @@ class _NovaReceitaScreenState extends State<NovaReceitaScreen> {
             const SizedBox(height: 16),
             _rotulo('Tipo da receita'),
             DropdownButtonFormField<String>(
-              value: tipo,
+              initialValue: tipo,
               decoration: const InputDecoration(),
               items: const [
                 DropdownMenuItem(value: 'DOCE', child: Text('Doce')),

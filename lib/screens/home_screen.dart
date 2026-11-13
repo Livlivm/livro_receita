@@ -5,6 +5,7 @@ import '../models/receita.dart';
 import '../services/receita_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/receita_card.dart';
+import '../widgets/receita_destaque_widget.dart';
 import 'detalhes_receita_screen.dart';
 import 'nova_receita_screen.dart';
 
@@ -95,6 +96,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> abrirDetalhes(Receita receita) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetalhesReceitaScreen(
+          receita: receita,
+          favorita: favoritas.contains((receita.id ?? receita.nome).toString()),
+          onFavoritar: () => alternarFavorita(receita),
+          onExcluir: () => service.excluir(receita.id),
+        ),
+      ),
+    );
+
+    if (mounted) {
+      carregarReceitas();
+    }
+  }
+
   @override
   void dispose() {
     busca.dispose();
@@ -117,11 +136,13 @@ class _HomeScreenState extends State<HomeScreen> {
           filtro != 'FAVORITAS' ||
           favoritas.contains((receita.id ?? receita.nome).toString());
 
-      return correspondeTexto && correspondeTipo && correspondeFavorita;
+      return correspondeTexto &&
+          (filtro == 'FAVORITAS' ? correspondeFavorita : correspondeTipo);
     }).toList();
 
     return Scaffold(
       drawer: _menuLateral(),
+
       appBar: AppBar(
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppTheme.laranjaEscuro,
         foregroundColor: Colors.white,
@@ -159,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Nova receita'),
       ),
+
       body: RefreshIndicator(
         color: AppTheme.laranjaEscuro,
         onRefresh: carregarReceitas,
@@ -200,7 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
+
             TextField(
               controller: busca,
               onChanged: (_) => setState(() {}),
@@ -209,7 +234,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 prefixIcon: Icon(Icons.search),
               ),
             ),
+
             const SizedBox(height: 22),
+
             const Text(
               'Explore as receitas',
               style: TextStyle(
@@ -218,7 +245,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppTheme.marrom,
               ),
             ),
+
             const SizedBox(height: 12),
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -231,7 +260,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 18),
+
             if (carregando)
               const Padding(
                 padding: EdgeInsets.all(40),
@@ -261,32 +292,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               )
-            else
-              ...lista.map(
-                (receita) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ReceitaCard(
-                    receita: receita,
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetalhesReceitaScreen(
-                            receita: receita,
-                            favorita: favoritas.contains(
-                              (receita.id ?? receita.nome).toString(),
-                            ),
-                            onFavoritar: () => alternarFavorita(receita),
-                            onExcluir: () => service.excluir(receita.id),
-                          ),
-                        ),
-                      );
+            else ...[
+              ReceitaDestaqueWidget(
+                receita: lista.first,
+                onTap: () => abrirDetalhes(lista.first),
+              ),
 
-                      if (mounted) carregarReceitas();
-                    },
-                  ),
+              const SizedBox(height: 20),
+
+              Text(
+                'Todas as receitas (${lista.length})',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.marrom,
                 ),
               ),
+
+              const SizedBox(height: 12),
+
+              ...lista
+                  .skip(1)
+                  .map(
+                    (receita) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ReceitaCard(
+                        receita: receita,
+                        onTap: () => abrirDetalhes(receita),
+                      ),
+                    ),
+                  ),
+            ],
           ],
         ),
       ),
@@ -390,11 +426,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.home_outlined),
               title: const Text('Início'),
               onTap: () => Navigator.pop(context),
             ),
+
             ListTile(
               leading: const Icon(Icons.add_circle_outline),
               title: const Text('Nova receita'),
@@ -403,6 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 abrirCadastro();
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.favorite_border),
               title: const Text('Minhas favoritas'),
@@ -411,6 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() => filtro = 'FAVORITAS');
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.refresh),
               title: const Text('Atualizar receitas'),
@@ -419,7 +459,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 carregarReceitas();
               },
             ),
+
             const Spacer(),
+
             const Padding(
               padding: EdgeInsets.all(18),
               child: Text(

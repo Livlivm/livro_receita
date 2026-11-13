@@ -31,6 +31,63 @@ class _DetalhesReceitaScreenState extends State<DetalhesReceitaScreen> {
     favorita = widget.favorita;
   }
 
+  Future<void> _editarReceita() async {
+    final navigator = Navigator.of(context);
+
+    final resultado = await navigator.push<bool>(
+      MaterialPageRoute(
+        builder: (context) => NovaReceitaScreen(receita: widget.receita),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (resultado == true) {
+      navigator.pop(true);
+    }
+  }
+
+  Future<void> _excluirReceita() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir receita?'),
+        content: const Text('Deseja realmente excluir esta receita?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmar != true) return;
+
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      await widget.onExcluir();
+
+      if (!mounted) return;
+
+      navigator.pop(true);
+    } catch (e) {
+      if (!mounted) return;
+
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = widget.receita;
@@ -54,59 +111,16 @@ class _DetalhesReceitaScreenState extends State<DetalhesReceitaScreen> {
             ),
           ),
           PopupMenuButton<String>(
-            onSelected: (opcao) async {
+            onSelected: (opcao) {
               if (opcao == 'editar') {
-                final resultado = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NovaReceitaScreen(receita: r),
-                  ),
-                );
-
-                if (resultado == true && context.mounted) {
-                  Navigator.pop(context, true);
-                }
+                _editarReceita();
               }
 
               if (opcao == 'excluir') {
-                final confirmar = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: const Text('Excluir receita?'),
-                    content: const Text(
-                      'Deseja realmente excluir esta receita?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                        child: const Text('Cancelar'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(dialogContext, true),
-                        child: const Text('Excluir'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirmar == true) {
-                  try {
-                    await widget.onExcluir();
-
-                    if (context.mounted) {
-                      Navigator.pop(context, true);
-                    }
-                  } catch (e) {
-                    if (!context.mounted) return;
-
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(e.toString())));
-                  }
-                }
+                _excluirReceita();
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (context) => const [
               PopupMenuItem(value: 'editar', child: Text('Editar receita')),
               PopupMenuItem(value: 'excluir', child: Text('Excluir receita')),
             ],
@@ -124,7 +138,9 @@ class _DetalhesReceitaScreenState extends State<DetalhesReceitaScreen> {
                     height: 235,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _imagemPadrao(),
+                    errorBuilder: (context, error, stackTrace) {
+                      return _imagemPadrao();
+                    },
                   )
                 : _imagemPadrao(),
           ),
